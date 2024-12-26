@@ -1,0 +1,2 @@
+SELECT COUNT(*) FROM payment
+WHERE amount NOT IN (1.99, 1.98) AND payment_date NOT BETWEEN '2007-02-01' AND '2007-03-01'
