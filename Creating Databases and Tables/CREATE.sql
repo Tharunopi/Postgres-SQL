@@ -1,0 +1,5 @@
+CREATE TABLE players(
+	player_id SERIAL PRIMARY KEY,
+	player_name VARCHAR NOT NULL,
+	age SMALLINT NOT NULL
+)
