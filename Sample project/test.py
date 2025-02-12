@@ -67,6 +67,17 @@ def insert_amount(st_id, tl_amt):
     cursor.close()
     cvu.close()
 
+def get_last_order():
+    cvu = connect_to_db()
+    cursor = cvu.cursor()
+    query = "SELECT * FROM orders ORDER BY order_id DESC LIMIT 1"
+    cursor.execute(query)
+    result = cursor.fetchone()  
+    
+    cursor.close()
+    cvu.close()
+    return result
+
 conn = connect_to_db()
 
 products = exe_query(conn, "SELECT * FROM products")
@@ -81,32 +92,34 @@ st.title("Orders creation page")
 
 st.subheader("Product")
 pr = st.selectbox("Enter product", product_list, placeholder="Select from below", index=None)
-p_id = product_list.index(pr) + 1
+if pr:
+    p_id = product_list.index(pr) + 1
 
 st.subheader("Store")
 sr = st.selectbox("Enter store", store_list, placeholder="Select from below", index=None)
-s_id = store_list.index(sr) + 1
+if sr:
+    s_id = store_list.index(sr) + 1
 
-if pr:
+if pr and sr:
     st.subheader("Quantity")
     qt = st.number_input("Enter quantity", placeholder="Type it...0", min_value=0.1, step=5.0)
 
     price = get_price(pr, product_list, products)
-if pr:
+if pr and sr and qt:
     st.subheader("Grand total")
     tl = st.number_input("Enter amount", min_value=price*qt, step=price)
+    if tl:
+        if st.button("Insert"):
+            insert_query(conn, s_id, p_id, qt, tl)
+            st.success("Data inserted successfully!")
 
-if tl:
-    if st.button("Insert"):
-        insert_query(conn, s_id, p_id, qt, tl)
-        st.success("Data inserted successfully!")
-
-        final_order = exe_query_spe("SELECT * FROM orders")[-1]
-        st.write(final_order)
-
-        st_id = final_order[1]
-        tl_amt = final_order[4]
-        insert_amount(st_id, tl_amt)
+            final_order = exe_query_spe("SELECT * FROM orders")[-1]
+            st_id = final_order[1]
+            tl_amt = final_order[4]
+            insert_amount(st_id, tl_amt)
+            last_ = get_last_order()
+            st.markdown(f"""Order ID: :blue-background[{last_[0]}], Store ID: :blue-background[{last_[1]}], Product ID: :blue-background[{last_[2]}],""")
+            st.markdown(f"""Quantity: :blue-background[{last_[3]}], Total amount: :blue-background[{last_[4]}] inr, Time: :blue-background[{last_[5]}]""")
 
         
         
