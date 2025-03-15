@@ -82,46 +82,45 @@ conn = connect_to_db()
 
 products = exe_query(conn, "SELECT * FROM products")
 product_list = [i[1] for i in products]
+product_ids = [i[0] for i in products]
+product_price = [i[2] for i in products]
 
 stores = exe_query(conn, "SELECT * FROM stores")
 store_list = [i[1] for i in stores]
+store_ids = [i[0] for i in stores]
 
-price = 0
+query_orders = []
 
 st.title("Orders creation page")
-
-st.subheader("Product")
-pr = st.selectbox("Enter product", product_list, placeholder="Select from below", index=None)
-if pr:
-    p_id = product_list.index(pr) + 1
 
 st.subheader("Store")
 sr = st.selectbox("Enter store", store_list, placeholder="Select from below", index=None)
 if sr:
-    s_id = store_list.index(sr) + 1
+    s_id = store_list.index(sr)
+    s_id = store_ids[s_id]
 
-if pr and sr:
-    st.subheader("Quantity")
-    qt = st.number_input("Enter quantity", placeholder="Type it...0", min_value=0.1, step=5.0)
+st.subheader("Product")
+pr = st.pills("Choose products", product_list, selection_mode="multi")
+pr_len = len(pr)
+if pr and sr:  
+    for i in pr:
+        with st.form(f"order session {i}"):
+            p = product_list.index(i)
+            p_id = product_ids[p]
+            p_price = product_price[p]
+            
+            qty = st.number_input(f"Enter {i} qty", min_value=1)
+            tl = qty * p_price
+            st.caption(f"Grand total: :blue[{tl}]")
 
-    price = get_price(pr, product_list, products)
-if pr and sr and qt:
-    st.subheader("Grand total")
-    tl = st.number_input("Enter amount", min_value=price*qt, step=price)
-    if tl:
-        if st.button("Insert"):
-            insert_query(conn, s_id, p_id, qt, tl)
-            st.success("Data inserted successfully!")
+            submit = st.form_submit_button("Insert")
+            if submit:
+                query_orders.append([s_id, p_id, qty, tl])
+                st.success(f"{i} form submitted")
 
-            final_order = exe_query_spe("SELECT * FROM orders")[-1]
-            st_id = final_order[1]
-            tl_amt = final_order[4]
-            insert_amount(st_id, tl_amt)
-            last_ = get_last_order()
-            st.markdown(f"""Order ID: :blue-background[{last_[0]}], Store ID: :blue-background[{last_[1]}], Product ID: :blue-background[{last_[2]}],""")
-            st.markdown(f"""Quantity: :blue-background[{last_[3]}], Total amount: :blue-background[{last_[4]}] inr, Time: :blue-background[{last_[5]}]""")
-
-        
+    if query_orders:
+        st.write(len(query_orders))
+                
         
 
         
